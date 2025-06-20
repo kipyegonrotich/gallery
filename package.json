@@ -1,1 +1,18 @@
-{"scripts":{"start":"node server.js"},"dependencies":{"express":"^5.1.0","mongoose":"^8.16.0","multer":"^2.0.1","uuid":"^11.1.0"}}
+{
+  "name": "gallery-app",
+  "version": "1.0.0",
+  "description": "A Node.js app for image gallery with MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["express", "mongoose", "gallery", "image", "upload"],
+  "author": "Nicky",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.16.0",
+    "multer": "^2.0.1",
+    "uuid": "^11.1.0"
+  }
+}
