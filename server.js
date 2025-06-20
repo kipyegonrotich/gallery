@@ -9,7 +9,7 @@ const index = require('./routes/index');
 const image = require('./routes/image');
 
 // Use environment variable for MongoDB connection string (fallback to example)
-const mongodb_url = process.env.MONGODB_URI || 'mongodb+srv://<username>:<password>@nixipone.mongodb.net/darkroom?retryWrites=true&w=majority';
+const mongodb_url = process.env.MONGODB_URI || 'mongodb+srv://<nixone>:<MyOneninE>@nixipone.mongodb.net/darkroom?retryWrites=true&w=majority';
 
 // Connect to MongoDB
 async function connectDB() {
