@@ -6,10 +6,17 @@
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["express", "mongoose", "gallery", "image", "upload"],
+  "keywords": [
+    "express",
+    "mongoose",
+    "gallery",
+    "image",
+    "upload"
+  ],
   "author": "Nicky",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mongoose": "^8.16.0",
     "multer": "^2.0.1",
