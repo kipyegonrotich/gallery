@@ -5,12 +5,12 @@ const path = require('path');
 let index = require('./routes/index');
 let image = require('./routes/image');
 
-// Use the MongoDB connection string from environment variable or fallback to localhost
-const mongodb_url = process.env.MONGODB_URI || 'mongodb://localhost:27017/darkroom';
+// Use the MONGODB_URI environment variable or fallback to local MongoDB
+const mongodbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/darkroom';
 
 async function connectDB() {
   try {
-    await mongoose.connect(mongodb_url, {
+    await mongoose.connect(mongodbUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
