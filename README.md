@@ -3,3 +3,4 @@ Automation test 2
 Automation test 3
 Automation test 4
 Automation test 5
+Automation test 6
