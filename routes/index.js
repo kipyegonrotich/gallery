@@ -1,16 +1,37 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 const uuid = require('uuid');
-let upload = require('./upload');
-const url = require('url');
-let Image = require('../models/images');
+const Image = require('../models/images');
 
-router.get('/', async (req, res) => {
+// configure multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, uuid.v4() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage });
+
+// POST route for uploading image
+router.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    const images = await Image.find({});
-    res.render('index', { images: images, msg: req.query.msg });
+    const newImage = new Image({
+      name: req.body.name,
+      description: req.body.description,
+      image: `/uploads/${req.file.filename}`,
+    });
+
+    await newImage.save();
+    res.redirect('/?msg=Image uploaded successfully');
   } catch (err) {
-    console.error('Error fetching images:', err);
-    res.status(500).send('Internal Server Error');
+    console.error(err);
+    res.redirect('/?msg=Error uploading image');
   }
 });
+
+// Export the router
+module.exports = router;
