@@ -11,16 +11,14 @@ const image = require('./routes/image');
 
 const app = express();
 
-// Use environment variable for MongoDB connection string (fallback to config)
-const MONGODB_URI = process.env.MONGODB_URI || config.mongoURI[app.settings.env];
+// ✅ Updated: Use safe, non-SRV MongoDB URI if not in .env
+const fallbackMongoURI = 'mongodb://nixone:MyOneninE@gallery.wc344.mongodb.net:27017/gallery?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || fallbackMongoURI;
 
-// Connect to MongoDB
+// ✅ Updated: Remove deprecated options
 async function connectDB() {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(MONGODB_URI);
     console.log(`✅ Connected to Database: ${MONGODB_URI}`);
   } catch (err) {
     console.error('❌ Database connection error:', err);
