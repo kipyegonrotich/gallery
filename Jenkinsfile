@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        MONGODB_URI = credentials('MONGODB_URI')  // Injected securely
+        MONGODB_URI = credentials('MONGODB_URI') 
         RENDER_URL = "https://gallery-ut78.onrender.com/"
-        SLACK_WEBHOOK = credentials('slackWebhook') // Slack Webhook securely injected
+        SLACK_WEBHOOK = credentials('slackWebhook') 
     }
 
     tools {
@@ -32,7 +32,7 @@ pipeline {
                             sh 'npm test'
                         }
                     } catch (err) {
-                        // Send failure email safely
+                        
                         try {
                             mail to: 'kipyegonrotich@gmail.com',
                                  subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -49,7 +49,7 @@ pipeline {
         stage('Deploy to Render') {
             steps {
                 echo "Deploying to Render..."
-                // Optional: Add deployment logic here
+                
             }
         }
     }
@@ -68,7 +68,7 @@ pipeline {
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification safely
+                // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
                          subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -91,7 +91,7 @@ pipeline {
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification safely
+                // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
                          subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
