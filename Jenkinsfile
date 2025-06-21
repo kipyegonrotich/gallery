@@ -16,7 +16,16 @@ pipeline{
         }
         stage("Test"){
             steps{
-                echo "Hakuna majaribio wakati huu"
+                script {
+                    try {
+                        sh 'npm test'
+                    } catch (err) {
+                        mail to: 'kipyegonrotich@gmail.com',
+                        subject: "TEST FAILURE"
+                        body: "Tests failed"
+                       error "Tests failed" 
+                    }
+                }
             }
         }
         stage("Deploy to Render"){
