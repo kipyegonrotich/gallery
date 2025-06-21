@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         RENDER_URL = "https://gallery-ut78.onrender.com/"
-        SLACK_WEBHOOK = credentials('slackWebhook') // Stored in Jenkins credentials as a Secret Text
-
+        SLACK_WEBHOOK = credentials('slackWebhook') // Stored in Jenkins credentials as Secret Text
     }
 
     tools {
@@ -14,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: "master", url: "https://github.com/kipyegonrotich/gallery.git"
+                checkout scm
             }
         }
 
@@ -30,9 +29,11 @@ pipeline {
                     try {
                         sh 'npm test'
                     } catch (err) {
-                        mail to: 'kipyegonrotich@gmail.com',
-                             subject: "TEST FAILURE",
-                             body: "Tests failed"
+                        // Optional: Enable this if your mail server is configured
+                        // mail to: 'kipyegonrotich@gmail.com',
+                        //      subject: "TEST FAILURE",
+                        //      body: "Tests failed"
+
                         error "Tests failed"
                     }
                 }
@@ -41,8 +42,8 @@ pipeline {
 
         stage('Deploy to Render') {
             steps {
-                echo "Deploying to Render"
-                
+                echo "Deploying to Render..."
+                // Add deployment command if manual
             }
         }
     }
@@ -50,30 +51,27 @@ pipeline {
     post {
         success {
             script {
-                def msg = "BUILD SUCCESSFUL!\\nBuild ID: #${env.BUILD_ID}\\nSite: ${env.RENDER_URL}"
-
-                echo "Sending Slack message..."
-                echo msg
+                def msg = """ *BUILD SUCCESSFUL!*
+*Build ID:* #${env.BUILD_ID}
+*Site:* ${env.RENDER_URL}"""
 
                 sh """
-                curl -X POST -H 'Content-type: application/json' \
-                --data '{\"text\": \"${msg}\"}' \
-                ${env.SLACK_WEBHOOK}
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
                 """
             }
         }
 
         failure {
             script {
-                def msg = "❌ BUILD FAILED!\\nBuild ID: #${env.BUILD_ID}"
-
-                echo "Sending Slack failure message..."
-                echo msg
+                def msg = """❌ *BUILD FAILED!*
+*Build ID:* #${env.BUILD_ID}"""
 
                 sh """
-                curl -X POST -H 'Content-type: application/json' \
-                --data '{\"text\": \"${msg}\"}' \
-                ${env.SLACK_WEBHOOK}
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
                 """
             }
         }
