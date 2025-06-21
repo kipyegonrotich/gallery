@@ -28,15 +28,18 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Make sure MONGODB_URI is available to the test process
                         withEnv(["MONGODB_URI=${env.MONGODB_URI}"]) {
                             sh 'npm test'
                         }
                     } catch (err) {
-                        // Send failure email
-                        mail to: 'kipyegonrotich@gmail.com',
-                             subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                             body: "Tests failed in Jenkins job '${env.JOB_NAME}' (Build #${env.BUILD_NUMBER}).\nCheck details here: ${env.BUILD_URL}"
+                        // Send failure email safely
+                        try {
+                            mail to: 'kipyegonrotich@gmail.com',
+                                 subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                                 body: "Tests failed in Jenkins job '${env.JOB_NAME}' (Build #${env.BUILD_NUMBER}).\nCheck details: ${env.BUILD_URL}"
+                        } catch (mailErr) {
+                            echo "📧 Failed to send test failure email: ${mailErr.message}"
+                        }
                         error "Tests failed"
                     }
                 }
@@ -46,7 +49,7 @@ pipeline {
         stage('Deploy to Render') {
             steps {
                 echo "Deploying to Render..."
-                // Add deployment logic if needed
+                // Optional: Add deployment logic here
             }
         }
     }
@@ -65,10 +68,14 @@ pipeline {
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification
-                mail to: 'kipyegonrotich@gmail.com',
-                     subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                     body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
+                // Email notification safely
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
+                } catch (mailErr) {
+                    echo "📧 Failed to send success email: ${mailErr.message}"
+                }
             }
         }
 
@@ -84,10 +91,14 @@ pipeline {
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification
-                mail to: 'kipyegonrotich@gmail.com',
-                     subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                     body: "Build failed!\nURL: ${env.BUILD_URL}"
+                // Email notification safely
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build failed!\nURL: ${env.BUILD_URL}"
+                } catch (mailErr) {
+                    echo "📧 Failed to send failure email: ${mailErr.message}"
+                }
             }
         }
     }
