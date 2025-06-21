@@ -43,8 +43,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/', index);
 app.use('/image', image);
 
-// Start server
+// Start server (Render requires binding to 0.0.0.0)
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is listening at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is listening on port ${PORT}`);
 });
