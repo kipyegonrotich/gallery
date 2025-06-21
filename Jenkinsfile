@@ -4,6 +4,7 @@ pipeline {
     environment {
         RENDER_URL = "https://gallery-ut78.onrender.com/"
         SLACK_WEBHOOK = credentials('slackWebhook') // Stored in Jenkins credentials as a Secret Text
+
     }
 
     tools {
