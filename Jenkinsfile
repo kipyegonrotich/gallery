@@ -38,7 +38,7 @@ pipeline {
                                  subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                                  body: "Tests failed in Jenkins job '${env.JOB_NAME}' (Build #${env.BUILD_NUMBER}).\nCheck details: ${env.BUILD_URL}"
                         } catch (mailErr) {
-                            echo "📧 Failed to send test failure email: ${mailErr.message}"
+                            echo "Failed to send test failure email: ${mailErr.message}"
                         }
                         error "Tests failed"
                     }
@@ -74,7 +74,7 @@ pipeline {
                          subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                          body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
                 } catch (mailErr) {
-                    echo "📧 Failed to send success email: ${mailErr.message}"
+                    echo "Failed to send success email: ${mailErr.message}"
                 }
             }
         }
@@ -97,7 +97,7 @@ pipeline {
                          subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                          body: "Build failed!\nURL: ${env.BUILD_URL}"
                 } catch (mailErr) {
-                    echo "📧 Failed to send failure email: ${mailErr.message}"
+                    echo "Failed to send failure email: ${mailErr.message}"
                 }
             }
         }
