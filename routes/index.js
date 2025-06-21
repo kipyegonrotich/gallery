@@ -25,4 +25,23 @@ router.post('/upload', (req, res) => {
     }
 
     if (!req.file) {
-      return res.redirect('/?msg=Error:
+      return res.redirect('/?msg=Error: No file selected!');
+    }
+
+    try {
+      const newImage = new Image({
+        name: req.file.filename,
+        size: req.file.size,
+        path: 'images/' + req.file.filename
+      });
+
+      await newImage.save();
+      res.redirect('/?msg=File uploaded successfully');
+    } catch (saveErr) {
+      console.error('Error saving image:', saveErr);
+      res.redirect('/?msg=Error saving file');
+    }
+  });
+});
+
+module.exports = router;
