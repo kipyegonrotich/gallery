@@ -1,51 +1,56 @@
-pipeline{
+pipeline {
     agent any
 
     environment {
         RENDER_URL = "https://gallery-ut78.onrender.com/"
         SLACK_WEBHOOK = credentials('slackWebhook')
     }
+
     tools {
         nodejs 'nodejs'
     }
-    
-    stages{
-        stage('Checkout'){
-            steps{
-                git branch:"master", url:"https://github.com/kipyegonrotich/gallery.git"
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: "master", url: "https://github.com/kipyegonrotich/gallery.git"
             }
         }
-        stage("Install Dependencies"){
+
+        stage("Install Dependencies") {
             steps {
                 sh 'npm install'
             }
         }
-        stage("Test"){
-            steps{
+
+        stage("Test") {
+            steps {
                 script {
                     try {
                         sh 'npm test'
                     } catch (err) {
                         mail to: 'kipyegonrotich@gmail.com',
-                        subject: "TEST FAILURE"
-                        body: "Tests failed"
-                       error "Tests failed" 
+                             subject: "TEST FAILURE",
+                             body: "Tests failed"
+                        error "Tests failed"
                     }
                 }
             }
         }
-        stage("Deploy to Render"){
+
+        stage("Deploy to Render") {
             steps {
                 echo "Deploying to Render"
             }
         }
     }
+
     post {
         success {
             script {
                 def msg = "*BUILD SUCCESSFUL!*\n" +
                           "Build ID: #${env.BUILD_ID}\n" +
-                          "Site: ${env.https://gallery-ut78.onrender.com/}"
+                          "Site: ${env.RENDER_URL}"
 
                 sh """
                 curl -X POST -H 'Content-type: application/json' \
