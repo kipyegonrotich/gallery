@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        MONGODB_URI = credentials('MONGODB_URI')
         RENDER_URL = "https://gallery-ut78.onrender.com/"
         SLACK_WEBHOOK = credentials('slackWebhook') // Stored in Jenkins credentials as Secret Text
     }
