@@ -1,40 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Image Gallery</title>
+  <meta charset="UTF-8">
+  <title>Milestone Page</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .gallery { display: flex; flex-wrap: wrap; gap: 20px; }
-    .image-box { border: 1px solid #ccc; padding: 10px; width: 250px; }
-    .image-box img { width: 100%; height: auto; }
-    .msg { color: green; font-weight: bold; }
-    h1.milestone { color: #444; font-size: 28px; margin-bottom: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #69da98;
+      font-size: 48px;
+    }
   </style>
 </head>
 <body>
-  <h1 class="milestone">MILESTONE 2</h1>
-
-  <% if (msg) { %>
-    <p class="msg"><%= msg %></p>
-  <% } %>
-
-  <form action="/image/upload" method="POST" enctype="multipart/form-data">
-    <input type="text" name="name" placeholder="Image Name" required><br><br>
-    <input type="text" name="description" placeholder="Image Description" required><br><br>
-    <input type="file" name="image" accept="image/*" required><br><br>
-    <button type="submit">Upload Image</button>
-  </form>
-
-  <hr>
-
-  <div class="gallery">
-    <% images.forEach(image => { %>
-      <div class="image-box">
-        <img src="<%= image.image %>" alt="<%= image.name %>">
-        <h3><%= image.name %></h3>
-        <p><%= image.description %></p>
-      </div>
-    <% }) %>
-  </div>
+  <h1>MILESTONE 2</h1>
 </body>
 </html>
