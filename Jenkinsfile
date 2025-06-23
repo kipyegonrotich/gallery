@@ -50,9 +50,9 @@ pipeline {
             steps {
                 echo "Deploying to Render..."
                 script {
-                    def hookUrl = credentials('renderDeployHook')
-            echo "Triggering deployment via Render webhook..."
-            sh "curl -X POST \"${hookUrl}\""
+                    withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_HOOK_URL')]) {
+                echo "Triggering deployment via Render webhook..."
+                sh 'curl -X POST "$RENDER_HOOK_URL"'
                 }
                 
             }
