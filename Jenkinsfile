@@ -32,6 +32,7 @@ pipeline {
                             sh 'npm test'
                         }
                     } catch (err) {
+                        
                         try {
                             mail to: 'kipyegonrotich@gmail.com',
                                  subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -48,9 +49,7 @@ pipeline {
         stage('Deploy to Render') {
             steps {
                 echo "Deploying to Render..."
-                withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_DEPLOY_HOOK')]) {
-                    sh 'curl -X POST "$RENDER_DEPLOY_HOOK"'
-                }
+                
             }
         }
     }
@@ -93,3 +92,14 @@ pipeline {
                 """
 
                 // Email notification 
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build failed!\nURL: ${env.BUILD_URL}"
+                } catch (mailErr) {
+                    echo "Failed to send failure email: ${mailErr.message}"
+                }
+            }
+        }
+    }
+}
