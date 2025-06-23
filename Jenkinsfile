@@ -52,7 +52,7 @@ pipeline {
                 script {
                     def hookUrl = credentials('renderDeployHook')
             echo "Triggering deployment via Render webhook..."
-            sh "curl -X POST ${hookUrl}"
+            sh "curl -X POST \"${hookUrl}\""
                 }
                 
             }
