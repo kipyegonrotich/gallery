@@ -5,7 +5,6 @@ pipeline {
         MONGODB_URI = credentials('MONGODB_URI') 
         RENDER_URL = "https://gallery-ut78.onrender.com/"
         SLACK_WEBHOOK = credentials('slackWebhook') 
-        RENDER_DEPLOY_HOOK = credentials('renderDeployHook') // add this in Jenkins credentials
     }
 
     tools {
@@ -29,9 +28,11 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'npm test'
+                        withEnv(["MONGODB_URI=${env.MONGODB_URI}"]) {
+                            sh 'npm test'
+                        }
                     } catch (err) {
-                        // Send email if tests fail
+                        
                         try {
                             mail to: 'kipyegonrotich@gmail.com',
                                  subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -45,16 +46,10 @@ pipeline {
             }
         }
 
-        stage('Publish Test Results') {
-            steps {
-                junit 'test-results/**/*.xml' // change path based on your reporter
-            }
-        }
-
         stage('Deploy to Render') {
             steps {
                 echo "Deploying to Render..."
-                sh "curl -X POST ${RENDER_DEPLOY_HOOK}"
+                
             }
         }
     }
@@ -62,15 +57,18 @@ pipeline {
     post {
         success {
             script {
-                def msg = """
-✅ *BUILD SUCCESSFUL!*
+                def msg = """✅ *BUILD SUCCESSFUL!*
 *Build ID:* #${env.BUILD_ID}
-*Site:* ${env.RENDER_URL}
-"""
+*Site:* ${env.RENDER_URL}"""
 
-                writeJSON file: 'slack-success.json', json: [text: msg.trim()]
-                sh "curl -X POST -H 'Content-type: application/json' --data @slack-success.json ${SLACK_WEBHOOK}"
+                // Slack notification
+                sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
+                """
 
+                // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
                          subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
@@ -83,14 +81,17 @@ pipeline {
 
         failure {
             script {
-                def msg = """
-❌ *BUILD FAILED!*
-*Build ID:* #${env.BUILD_ID}
-"""
+                def msg = """❌ *BUILD FAILED!*
+*Build ID:* #${env.BUILD_ID}"""
 
-                writeJSON file: 'slack-fail.json', json: [text: msg.trim()]
-                sh "curl -X POST -H 'Content-type: application/json' --data @slack-fail.json ${SLACK_WEBHOOK}"
+                // Slack notification
+                sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
+                """
 
+                // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
                          subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
