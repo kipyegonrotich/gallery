@@ -1,56 +1,45 @@
 pipeline {
     agent any
 
+    environment {
+        MONGODB_URI = credentials('MONGODB_URI') 
+        RENDER_URL = "https://gallery-ut78.onrender.com/"
+    }
+
     tools {
         nodejs 'nodejs'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage("Clone Branch master") {
             steps {
-                git branch: 'master', url: 'https://github.com/kipyegonrotich/gallery.git'
+                git branch: "master", url: "https://github.com/kipyegonrotich/gallery.git"
             }
         }
 
-        stage('Initial Dependencies') {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
 
-        stage('Tests') {
+        stage("Perform Test...") {
             steps {
                 script {
                     echo "Performing npm test..."
-                    sh 'npm test'
-                }
-            }
-            post {
-                failure {
-                    emailext(
-                        subject: "Test Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                        body: "Tests failed in build ${env.BUILD_NUMBER}. Check console at ${env.BUILD_URL}",
-                        to: "kipyegonrotich@gmail.com"
-                    )
+                    sh "npm test"
                 }
             }
         }
 
         stage('Deploy to Render') {
             steps {
-                echo 'Deployment successful'
-                echo 'App URL: https://gallery-ut78.onrender.com'
-            }
-            post {
-                success {
-                    slackSend(
-                        channel: '#nicholas_ip1',
-                        color: 'good',
-                        message: "*Build #${env.BUILD_NUMBER}* deployed to Render: https://gallery-ut78.onrender.com",
-                        teamDomain: 'nix-zca8056',
-                        tokenCredentialId: 'slack-token',
-                        botUser: true
-                    )
+                echo "Deploying to Render..."
+                script {
+                    withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_HOOK_URL')]) {
+                        echo "Triggering deployment via Render webhook..."
+                        sh 'curl -X POST "$RENDER_HOOK_URL"'
+                    }
                 }
             }
         }
@@ -58,10 +47,32 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            script {
+                slackSend(
+                    channel: '#nicholas_ip1',
+                    color: 'good',
+                    message: """*BUILD SUCCESSFUL!*
+*Build ID:* #${env.BUILD_ID}
+*Site:* ${env.RENDER_URL}""",
+                    tokenCredentialId: 'slack-token', 
+                    teamDomain: 'nix-zca8056',
+                    botUser: true
+                )
+            }
         }
+
         failure {
-            echo 'Pipeline failed!'
+            script {
+                
+                // Email fallback
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build failed!\nURL: ${env.BUILD_URL}"
+                } catch (mailErr) {
+                    echo "Failed to send failure email: ${mailErr.message}"
+                }
+            }
         }
     }
 }
