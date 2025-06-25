@@ -1,85 +1,61 @@
 pipeline {
     agent any
-
-    environment {
-        MONGODB_URI = credentials('MONGODB_URI') 
-        RENDER_URL = "https://gallery-ut78.onrender.com/"
-        SLACK_WEBHOOK = credentials('slackWebhook') 
-    }
-
+    
     tools {
-        nodejs 'nodejs'
+        nodejs 'NodeJS-24'
     }
-
     stages {
-        stage("Clone Branch master") {
+        stage('Clone Repository') {
             steps {
-                git branch: "master", url: "https://github.com/kipyegonrotich/gallery.git"
+                git branch: 'master', url: 'https://github.com/kipyegonrotich/gallery.git'
             }
         }
-
-        stage('Install Dependencies') {
+        stage('Initial Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
-
-        stage("Perform Test..."){
-            steps{
+        stage('Tests') {
+            steps {
                 script{
-                    echo "Perfoming npm test..."
-                    sh "npm test"
+                    echo "perfoming npm test.."
+                    sh 'npm test'
+                    }
+                } 
+            }
+            post {
+                failure {
+                    emailext (
+                        subject: "Test Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+                        body: "Tests failed in build ${env.BUILD_NUMBER}. Check console at ${env.BUILD_URL}",
+                        to: "kipyegonrotich@gmail.com"
+                    )
                 }
             }
         }
-
         stage('Deploy to Render') {
             steps {
-                echo "Deploying to Render..."
-                script {
-                    withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_HOOK_URL')]) {
-                echo "Triggering deployment via Render webhook..."
-                sh 'curl -X POST "$RENDER_HOOK_URL"'
+                echo 'Deployment successfull'
+                echo 'App URL: https://gallery-ut78.onrender.com'
+            }
+            post {
+                success {
+                    slackSend(
+    channel: '#nicholas_ip1',
+    color: 'good',
+    message: "Successful! Build #${env.BUILD_NUMBER} deployed to Render: https://gallery-ut78.onrender.com",
+    tokenCredentialId: 'slack-token'
+)
                 }
-                } 
             }
         }
     }
-
     post {
         success {
-            script {
-                def msg = """*BUILD SUCCESSFUL!*
-*Build ID:* #${env.BUILD_ID}
-*Site:* ${env.RENDER_URL}"""
-
-                // Slack notification
-            withCredentials([string(credentialsId: 'slackWebhook', variable: 'SLACK_WEBHOOK')]) {
-            sh """
-                curl -X POST -H "Content-type: application/json" \\
-                --data '{\"text\": \"${msg.replaceAll('"', '\\\\"')}\"}' \\
-                "${SLACK_WEBHOOK}"
-            """
-                }
-                
-            }
+            echo 'Pipeline completed successfully!'
         }
-
         failure {
-            script {
-                def msg = """*BUILD FAILED!*
-*Build ID:* #${env.BUILD_ID}"""
-
-                
-                // Email notification 
-                try {
-                    mail to: 'kipyegonrotich@gmail.com',
-                         subject: "BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                         body: "Build failed!\nURL: ${env.BUILD_URL}"
-                } catch (mailErr) {
-                    echo "Failed to send failure email: ${mailErr.message}"
-                }
-            }
+            echo 'Pipeline failed!'
         }
     }
 }
