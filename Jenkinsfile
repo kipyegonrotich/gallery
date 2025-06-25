@@ -37,7 +37,7 @@ pipeline {
                 echo "Deploying to Render..."
                 script {
                     withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_HOOK_URL')]) {
-                        echo "Triggering deployment via Render webhook..."
+                        echo "Deploying"
                         sh 'curl -X POST "$RENDER_HOOK_URL"'
                     }
                 }
@@ -64,13 +64,13 @@ pipeline {
         failure {
             script {
                 
-                // Email fallback
+                // Email
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
                          subject: "BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                          body: "Build failed!\nURL: ${env.BUILD_URL}"
                 } catch (mailErr) {
-                    echo "Failed to send failure email: ${mailErr.message}"
+                    echo "Failed: ${mailErr.message}"
                 }
             }
         }
