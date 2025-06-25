@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        renderhook = credentials('RENDER_DEPLOY_HOOK')     
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL') 
-        RENDER_URL = "https://gallery-ut78.onrender.com/"   
+        MONGODB_URI = credentials('MONGODB_URI') 
+        RENDER_URL = "https://gallery-ut78.onrender.com/"
+        SLACK_WEBHOOK = credentials('slackWebhook') 
     }
 
     tools {
@@ -18,25 +18,43 @@ pipeline {
             }
         }
 
-        stage("Install Dependencies") {
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
 
-        stage("Test") {
+        stage('Test') {
             steps {
-                echo "Running tests"
-                sh 'npm test'
+                script {
+                    try {
+                        withEnv(["MONGODB_URI=${env.MONGODB_URI}"]) {
+                            sh 'npm test'
+                        }
+                    } catch (err) {
+                        
+                        try {
+                            mail to: 'kipyegonrotich@gmail.com',
+                                 subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                                 body: "Tests failed in Jenkins job '${env.JOB_NAME}' (Build #${env.BUILD_NUMBER}).\nCheck details: ${env.BUILD_URL}"
+                        } catch (mailErr) {
+                            echo "Failed to send test failure email: ${mailErr.message}"
+                        }
+                        error "Tests failed"
+                    }
+                }
             }
         }
 
-        stage("Deploy to Render") {
+        stage('Deploy to Render') {
             steps {
+                echo "Deploying to Render..."
                 script {
-                    sh "curl -X POST ${renderhook}"
-                    echo "Deployed to Render"
+                    withCredentials([string(credentialsId: 'renderDeployHook', variable: 'RENDER_HOOK_URL')]) {
+                echo "Triggering deployment via Render webhook..."
+                sh 'curl -X POST "$RENDER_HOOK_URL"'
                 }
+                } 
             }
         }
     }
@@ -44,30 +62,48 @@ pipeline {
     post {
         success {
             script {
-                def msg = """*BUILD SUCCESSFUL!*
+                def msg = """✅ *BUILD SUCCESSFUL!*
 *Build ID:* #${env.BUILD_ID}
 *Site:* ${env.RENDER_URL}"""
 
-                // Slack Notification
+                // Slack notification
                 sh """
                 curl -X POST -H 'Content-type: application/json' \\
                 --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
                 "${SLACK_WEBHOOK}"
                 """
+
+                // Email notification 
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
+                } catch (mailErr) {
+                    echo "Failed to send success email: ${mailErr.message}"
+                }
             }
         }
 
         failure {
             script {
-                def msg = """*BUILD FAILED!*
+                def msg = """❌ *BUILD FAILED!*
 *Build ID:* #${env.BUILD_ID}"""
 
-                // Email Notification 
-                mail(
-                    to: 'kipyegonrotich@gmail.com',
-                    subject: "BUILD FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: "The build failed.\nURL: ${env.BUILD_URL}"
-                )
+                // Slack notification
+                sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
+                """
+
+                // Email notification 
+                try {
+                    mail to: 'kipyegonrotich@gmail.com',
+                         subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         body: "Build failed!\nURL: ${env.BUILD_URL}"
+                } catch (mailErr) {
+                    echo "Failed to send failure email: ${mailErr.message}"
+                }
             }
         }
     }
