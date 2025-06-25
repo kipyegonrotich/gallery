@@ -1,31 +1,33 @@
 pipeline {
     agent any
-    
+
     tools {
         nodejs 'NodeJS-24'
     }
+
     stages {
         stage('Clone Repository') {
             steps {
                 git branch: 'master', url: 'https://github.com/kipyegonrotich/gallery.git'
             }
         }
+
         stage('Initial Dependencies') {
             steps {
                 sh 'npm install'
             }
         }
+
         stage('Tests') {
             steps {
-                script{
-                    echo "perfoming npm test.."
+                script {
+                    echo "Performing npm test..."
                     sh 'npm test'
-                    }
-                } 
+                }
             }
             post {
                 failure {
-                    emailext (
+                    emailext(
                         subject: "Test Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
                         body: "Tests failed in build ${env.BUILD_NUMBER}. Check console at ${env.BUILD_URL}",
                         to: "kipyegonrotich@gmail.com"
@@ -33,23 +35,27 @@ pipeline {
                 }
             }
         }
+
         stage('Deploy to Render') {
             steps {
-                echo 'Deployment successfull'
+                echo 'Deployment successful'
                 echo 'App URL: https://gallery-ut78.onrender.com'
             }
             post {
                 success {
                     slackSend(
-    channel: '#nicholas_ip1',
-    color: 'good',
-    message: "Successful! Build #${env.BUILD_NUMBER} deployed to Render: https://gallery-ut78.onrender.com",
-    tokenCredentialId: 'slack-token'
-)
+                        channel: '#nicholas_ip1',
+                        color: 'good',
+                        message: "*Build #${env.BUILD_NUMBER}* deployed to Render: https://gallery-ut78.onrender.com",
+                        teamDomain: 'nix-zca8056',
+                        tokenCredentialId: 'slack-token',
+                        botUser: true
+                    )
                 }
             }
         }
     }
+
     post {
         success {
             echo 'Pipeline completed successfully!'
