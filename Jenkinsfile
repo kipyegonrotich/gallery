@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         renderhook = credentials('RENDER_DEPLOY_HOOK')     
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')   
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL') 
+        RENDER_URL = "https://gallery-ut78.onrender.com/"   
     }
 
     tools {
@@ -53,8 +54,7 @@ pipeline {
                 --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
                 "${SLACK_WEBHOOK}"
                 """
-
-                            }
+            }
         }
 
         failure {
@@ -62,11 +62,12 @@ pipeline {
                 def msg = """*BUILD FAILED!*
 *Build ID:* #${env.BUILD_ID}"""
 
-               
-                // Email Notification
-                mail to: 'kipyegonrotich@gmail.com',
-                     subject: "BUILD FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                     body: "The build failed.\nURL: ${env.BUILD_URL}"
+                // Email Notification 
+                mail(
+                    to: 'kipyegonrotich@gmail.com',
+                    subject: "BUILD FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: "The build failed.\nURL: ${env.BUILD_URL}"
+                )
             }
         }
     }
