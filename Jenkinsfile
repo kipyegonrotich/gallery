@@ -24,24 +24,11 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                script {
-                    try {
-                        withEnv(["MONGODB_URI=${env.MONGODB_URI}"]) {
-                            sh 'npm test'
-                        }
-                    } catch (err) {
-                        
-                        try {
-                            mail to: 'kipyegonrotich@gmail.com',
-                                 subject: "❌ TEST FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                                 body: "Tests failed in Jenkins job '${env.JOB_NAME}' (Build #${env.BUILD_NUMBER}).\nCheck details: ${env.BUILD_URL}"
-                        } catch (mailErr) {
-                            echo "Failed to send test failure email: ${mailErr.message}"
-                        }
-                        error "Tests failed"
-                    }
+        stage("Perform Test..."){
+            steps{
+                script{
+                    echo "Perfoming npm test..."
+                    sh "npm test"
                 }
             }
         }
@@ -62,40 +49,27 @@ pipeline {
     post {
         success {
             script {
-                def msg = """✅ *BUILD SUCCESSFUL!*
+                def msg = """*BUILD SUCCESSFUL!*
 *Build ID:* #${env.BUILD_ID}
 *Site:* ${env.RENDER_URL}"""
 
                 // Slack notification
-                sh """
-                curl -X POST -H 'Content-type: application/json' \\
-                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+            sh """
+                curl -X POST -H "Content-type: application/json" \\
+                --data '{\"text\": \"${msg.replaceAll('"', '\\\\"')}\"}' \\
                 "${SLACK_WEBHOOK}"
-                """
+            """
 
-                // Email notification 
-                try {
-                    mail to: 'kipyegonrotich@gmail.com',
-                         subject: "✅ BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                         body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
-                } catch (mailErr) {
-                    echo "Failed to send success email: ${mailErr.message}"
-                }
+                
             }
         }
 
         failure {
             script {
-                def msg = """❌ *BUILD FAILED!*
+                def msg = """*BUILD FAILED!*
 *Build ID:* #${env.BUILD_ID}"""
 
-                // Slack notification
-                sh """
-                curl -X POST -H 'Content-type: application/json' \\
-                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
-                "${SLACK_WEBHOOK}"
-                """
-
+                
                 // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
