@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        renderhook = credentials('RENDER_DEPLOY_HOOK')
-            }
+        renderhook = credentials('RENDER_DEPLOY_HOOK')     
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')   
+    }
 
     tools {
         nodejs 'nodejs'
@@ -27,15 +28,6 @@ pipeline {
                 echo "Running tests"
                 sh 'npm test'
             }
-            post {
-                failure {
-                    mail(
-                        subject: "Test Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                        body: "Tests failed in build #${env.BUILD_NUMBER}.\nDetails: ${env.BUILD_URL}",
-                        to: "kipyegonrotich@gmail.com"
-                    )
-                }
-            }
         }
 
         stage("Deploy to Render") {
@@ -50,20 +42,32 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline successful'
+            script {
+                def msg = """*BUILD SUCCESSFUL!*
+*Build ID:* #${env.BUILD_ID}
+*Site:* ${env.RENDER_URL}"""
 
-            slackSend(
-                channel: '#nicholas_ip1',
-                color: 'good',
-                message: "Deployment Successful!\nBuild #${env.BUILD_NUMBER} deployed to Render: https://gallery-ut78.onrender.com",
-                teamDomain: 'nix-zca8056',
-                tokenCredentialId: 'slack-token',
-                botUser: true
-            )
+                // Slack Notification
+                sh """
+                curl -X POST -H 'Content-type: application/json' \\
+                --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
+                "${SLACK_WEBHOOK}"
+                """
+
+                            }
         }
 
         failure {
-            echo 'Pipeline failed!'
+            script {
+                def msg = """*BUILD FAILED!*
+*Build ID:* #${env.BUILD_ID}"""
+
+               
+                // Email Notification
+                mail to: 'kipyegonrotich@gmail.com',
+                     subject: "BUILD FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "The build failed.\nURL: ${env.BUILD_URL}"
+            }
         }
     }
 }
