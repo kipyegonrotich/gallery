@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         renderhook = credentials('RENDER_DEPLOY_HOOK')
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')
-    }
+            }
 
     tools {
         nodejs 'nodejs'
