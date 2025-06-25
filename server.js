@@ -1,11 +1,9 @@
-// Only load dotenv in non-production environments
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
-
+//Dependencies
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const config = require('./_config');
+const bodyParser = require('body-parser');
 
 // Routes
 const index = require('./routes/index');
@@ -13,40 +11,33 @@ const image = require('./routes/image');
 
 const app = express();
 
-// ✅ Securely use injected env variable
-const MONGODB_URI = process.env.MONGODB_URI;
+// Database connection
 
-if (!MONGODB_URI) {
-  console.error("❌ MONGODB_URI is not defined.");
-  process.exit(1);
-}
+const MONGODB_URI = process.env.MONGODB_URI || config.mongoURI[app.settings.env]
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true  },(err)=>{
+    if (err) {
+        console.log(err)
+    }else{
+        console.log(`Connected to Database: ${MONGODB_URI}`)
+    }
+});
 
-async function connectDB() {
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log('✅ Connected to MongoDB');
-  } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
-  }
-}
-
-connectDB();
-
+// View Engine
 app.set('view engine', 'ejs');
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+// Set up the public folder;
+app.use(express.static(path.join(__dirname, 'public')));
+
+// body parser middleware
+app.use(express.json());
 app.use('/', index);
 app.use('/image', image);
 
+// Render configuration 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () =>{
+    console.log(`Server is listening at http://localhost:${PORT}`);
 });
+
 
 module.exports = app;

@@ -1,9 +1,9 @@
 {
-  "name": "gallery-app",
+  "name": "dark-room",
   "version": "1.0.0",
-  "description": "A Node.js app for image gallery with MongoDB",
+  "description": "gallery-app",
   "main": "server.js",
-  "scripts": {
+    "scripts": {
     "start": "node server.js",
     "test": "mocha --exit"
   },
