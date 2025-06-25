@@ -57,7 +57,7 @@ pipeline {
             sh """
                 curl -X POST -H "Content-type: application/json" \\
                 --data '{\"text\": \"${msg.replaceAll('"', '\\\\"')}\"}' \\
-                "${SLACK_WEBHOOK}"
+                "${slackWebhook}"
             """
 
                 
@@ -73,7 +73,7 @@ pipeline {
                 // Email notification 
                 try {
                     mail to: 'kipyegonrotich@gmail.com',
-                         subject: "❌ BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                         subject: "BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
                          body: "Build failed!\nURL: ${env.BUILD_URL}"
                 } catch (mailErr) {
                     echo "Failed to send failure email: ${mailErr.message}"
