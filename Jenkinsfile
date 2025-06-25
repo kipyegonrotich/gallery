@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         renderhook = credentials('RENDER_DEPLOY_HOOK')     
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')   
+   
     }
 
     tools {
@@ -33,7 +33,7 @@ pipeline {
         stage("Deploy to Render") {
             steps {
                 script {
-                    sh "curl -X POST ${renderhook}"
+                    sh "curl -X POST '${renderhook}'"
                     echo "Deployed to Render"
                 }
             }
