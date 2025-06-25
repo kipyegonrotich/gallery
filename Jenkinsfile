@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        renderhook = credentials('RENDER_DEPLOY_HOOK')     
-   
+        renderhook = credentials('RENDER_DEPLOY_HOOK')
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')
     }
 
     tools {
@@ -28,12 +28,21 @@ pipeline {
                 echo "Running tests"
                 sh 'npm test'
             }
+            post {
+                failure {
+                    mail(
+                        subject: "Test Failed: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                        body: "Tests failed in build #${env.BUILD_NUMBER}.\nDetails: ${env.BUILD_URL}",
+                        to: "kipyegonrotich@gmail.com"
+                    )
+                }
+            }
         }
 
         stage("Deploy to Render") {
             steps {
                 script {
-                    sh "curl -X POST '${renderhook}'"
+                    sh "curl -X POST ${renderhook}"
                     echo "Deployed to Render"
                 }
             }
@@ -42,11 +51,12 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline successful'
+
             slackSend(
                 channel: '#nicholas_ip1',
                 color: 'good',
-                message: "Deployment Successful! Build #${env.BUILD_NUMBER} deployed to Render: https://gallery-ut78.onrender.com/",
+                message: "Deployment Successful!\nBuild #${env.BUILD_NUMBER} deployed to Render: https://gallery-ut78.onrender.com",
                 teamDomain: 'nix-zca8056',
                 tokenCredentialId: 'slack-token',
                 botUser: true
