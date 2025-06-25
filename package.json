@@ -7,15 +7,9 @@
     "start": "node server.js",
     "test": "mocha --exit"
   },
-  "keywords": [
-    "express",
-    "mongoose",
-    "gallery",
-    "image",
-    "upload"
-  ],
-  "author": "Nicky",
-  "license": "MIT",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",

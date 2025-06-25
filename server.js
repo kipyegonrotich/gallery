@@ -1,13 +1,13 @@
 // Dependencies
 const express = require('express');
-const bodyParser = require('body-parser'); // optional; express has built-in parsers
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const config = require('./_config');
 
 // Define routes
-const index = require('./routes/index');
-const image = require('./routes/image');
+let index = require('./routes/index');
+let image = require('./routes/image');
 
 // Initialize app
 const app = express();
@@ -23,7 +23,7 @@ mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true})
   console.error('MongoDB connection error:', err);
   process.exit(1); 
   });
-// Optional: stop app if DB connection fails
+
 
 // View engine
 app.set('view engine', 'ejs');
