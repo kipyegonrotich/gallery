@@ -54,12 +54,13 @@ pipeline {
 *Site:* ${env.RENDER_URL}"""
 
                 // Slack notification
+            withCredentials([string(credentialsId: 'slackWebhook', variable: 'SLACK_WEBHOOK')]) {
             sh """
                 curl -X POST -H "Content-type: application/json" \\
                 --data '{\"text\": \"${msg.replaceAll('"', '\\\\"')}\"}' \\
-                "${slackWebhook}"
+                "${SLACK_WEBHOOK}"
             """
-
+                }
                 
             }
         }
