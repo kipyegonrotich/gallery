@@ -1,60 +1,63 @@
 pipeline {
     agent any
 
-    
+    environment {
+        renderhook = credentials('RENDER_DEPLOY_HOOK')     
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK_URL')   
+    }
+
     tools {
         nodejs 'nodejs'
     }
 
     stages {
-        stage("Clone Branch master"){
-            steps{
-                git branch:"master", url:"https://github.com/kipyegonrotich/gallery.git"
+        stage("Clone Branch master") {
+            steps {
+                git branch: "master", url: "https://github.com/kipyegonrotich/gallery.git"
             }
         }
 
-        stage('Install Dependencies') {
+        stage("Install Dependencies") {
             steps {
                 sh 'npm install'
             }
         }
-        stage (Test){
+
+        stage("Test") {
             steps {
-                echo "Testing"
+                echo "Running tests"
                 sh 'npm test'
             }
         }
-    }
-    stage("Deploying to Render"){
-            steps{
-                script{
+
+        stage("Deploy to Render") {
+            steps {
+                script {
                     sh "curl -X POST ${renderhook}"
-                    echo "Deployed to render"
+                    echo "Deployed to Render"
                 }
             }
         }
-post {
+    }
+
+    post {
         success {
             script {
                 def msg = """*BUILD SUCCESSFUL!*
 *Build ID:* #${env.BUILD_ID}
 *Site:* ${env.RENDER_URL}"""
 
-                // Slack notification
+                // Slack Notification
                 sh """
                 curl -X POST -H 'Content-type: application/json' \\
                 --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification 
-                try {
-                    mail to: 'kipyegonrotich@gmail.com',
-                         subject: "BUILD SUCCESS: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                         body: "Build succeeded!\nURL: ${env.BUILD_URL}\n\nSite: ${env.RENDER_URL}"
-                } catch (mailErr) {
-                    echo "Failed to send success email: ${mailErr.message}"
-                }
+                // Email Notification
+                mail to: 'kipyegonrotich@gmail.com',
+                     subject: "BUILD SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "The build succeeded!\nURL: ${env.BUILD_URL}\nSite: ${env.RENDER_URL}"
             }
         }
 
@@ -63,21 +66,17 @@ post {
                 def msg = """*BUILD FAILED!*
 *Build ID:* #${env.BUILD_ID}"""
 
-                // Slack notification
+                // Slack Notification
                 sh """
                 curl -X POST -H 'Content-type: application/json' \\
                 --data '{"text": "${msg.replaceAll('"', '\\"')}"}' \\
                 "${SLACK_WEBHOOK}"
                 """
 
-                // Email notification 
-                try {
-                    mail to: 'kipyegonrotich@gmail.com',
-                         subject: "BUILD FAILURE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                         body: "Build failed!\nURL: ${env.BUILD_URL}"
-                } catch (mailErr) {
-                    echo "Failed to send failure email: ${mailErr.message}"
-                }
+                // Email Notification
+                mail to: 'kipyegonrotich@gmail.com',
+                     subject: "BUILD FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                     body: "The build failed.\nURL: ${env.BUILD_URL}"
             }
         }
     }
