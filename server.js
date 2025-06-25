@@ -1,11 +1,11 @@
 // Dependencies
 const express = require('express');
+const bodyParser = require('body-parser'); // optional; express has built-in parsers
 const mongoose = require('mongoose');
 const path = require('path');
 const config = require('./_config');
-const bodyParser = require('body-parser');
 
-// Routes
+// Define routes
 const index = require('./routes/index');
 const image = require('./routes/image');
 
@@ -15,18 +15,15 @@ const app = express();
 // Database connection 
 const MONGODB_URI = process.env.MONGODB_URI || config.mongoURI[app.settings.env];
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-},(err)=>{
-    if (err) {
-        console.log(err)
-    }else{
-        console.log(`Connected to Database: ${MONGODB_URI}`)
-    }
-});
-// test if the database has connected successfully
-
+mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useUnifiedTopology: true})
+.then(() => {
+  console.log(`Connected to Database: ${MONGODB_URI}`);
+})
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1); 
+  });
+// Optional: stop app if DB connection fails
 
 // View engine
 app.set('view engine', 'ejs');
@@ -36,11 +33,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Body parser middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Handles form submissions
-
-// Routes
 app.use('/', index);
 app.use('/image', image);
+app.use(express.urlencoded({ extended: true })); // Handles form submissions
 
 // Render port configuration
 const PORT = process.env.PORT || 5000;
